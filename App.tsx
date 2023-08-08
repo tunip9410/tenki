@@ -1,21 +1,7 @@
 import styled from "styled-components/native";
-import createGlobalStyle from "styled-components";
-import {useState, useEffect, useCallback} from "react";
+import {useState, useEffect} from "react";
+import { useFonts } from "expo-font"
 import * as Location from "expo-location";
-
-import Montserrat from "./assets/Montserrat/Montserrat-Medium.ttf"
-
-const GlobalStyle = createGlobalStyle`
-    @font-face {
-        font-family: Montserrat;
-        src: url(${Montserrat});
-        font-style: normal;
-    }
-    
-    * {
-        font-family: Montserrat,sans-serif;
-    }
-`
 
 const MainLayer = styled.View`
     justify-content: center;
@@ -28,6 +14,7 @@ const MainContentLayer = styled.View`
     width: 100%;
     justify-content: center;
     margin-left: 70px;
+    margin-top: 40px;
 `
 
 const SubContentLayer = styled.View`
@@ -36,18 +23,29 @@ const SubContentLayer = styled.View`
 
 const TempText = styled.Text`
     font-size: 100px;
+    font-family: "Montserrat";
 `
 
 const Description = styled.Text`
     font-size: 40px;
-    font-weight: normal;
+    font-family: "Montserrat";
+    margin-bottom: 10px;
+`
+
+const CityName = styled(Description)`
+    font-size: 15px;
+    margin: 0;
 `
 
 function App() {
     const [city, setCity] = useState("")
     const [description, setDescription] = useState("")
     const [temp, setTemp] = useState(0)
-    const [image, setImage] = useState("")
+    const [tempMax, setTempMax] = useState(0)
+    const [tempMin, setTempMin] = useState(0)
+    const [fontsLoaded] = useFonts({
+        "Montserrat": require("./assets/Montserrat/Montserrat-Regular.ttf")
+    })
 
     async function getLocation() {
         await Location.requestForegroundPermissionsAsync();
@@ -61,7 +59,8 @@ function App() {
             setCity(json.name)
             setDescription(json.weather[0].description)
             setTemp(json.main.temp)
-            setImage(json.weather[0].icon)
+            setTempMin(json.main.temp_min)
+            setTempMax(json.main.temp_max)
         })
     }
 
@@ -69,15 +68,25 @@ function App() {
         getLocation().then(r => r)
     }, [])
 
-    return (
-        <MainLayer>
-            <MainContentLayer>
-                <TempText>{temp.toFixed(1)}</TempText>
-                <Description>{description}</Description>
-            </MainContentLayer>
-            <SubContentLayer></SubContentLayer>
-        </MainLayer>
-    );
+    if (fontsLoaded) {
+        return (
+            <>
+                <MainLayer>
+                    <MainContentLayer>
+                        <TempText>{temp.toFixed(1)}</TempText>
+                        <Description>{description}</Description>
+                        <CityName>{city}</CityName>
+                        <CityName>{tempMax.toFixed(1)} / {tempMin.toFixed(1)}</CityName>
+                    </MainContentLayer>
+                    <SubContentLayer></SubContentLayer>
+                </MainLayer>
+            </>
+        );
+    } else {
+        return (
+            <MainLayer></MainLayer>
+        )
+    }
 }
 
 export default App
